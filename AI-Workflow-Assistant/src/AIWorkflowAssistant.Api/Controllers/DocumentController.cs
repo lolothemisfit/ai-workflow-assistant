@@ -18,16 +18,8 @@ namespace AIWorkflowAssistant.Api.Controllers
         [HttpPost("process")]
         public ActionResult<DocumentResponseDto> ProcessDocument(DocumentRequestDto request)
         {
-            var response = new DocumentResponseDto
-            {
-                Summary = "This is a summary of the document.",
-                ActionItems =
-                [
-                    "Action Item 1",
-                    "Action Item 2",
-                    "Action Item 3"
-                ]
-            };
+            var response = _documentService.ProcessDocument(request);
+
             return Ok(response);
 
         }

@@ -1,9 +1,16 @@
 using AIWorkflowAssistant.Api.Interfaces;
 using AIWorkflowAssistant.Api.Services;
+using AIWorkflowAssistant.Api.Data;
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
+
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
+    options.UseSqlServer(
+        builder.Configuration.GetConnectionString("DefaultConnection")));
+        
 builder.Services.AddScoped<IDocumentService, DocumentService>();
 
 // Add services to the container.
