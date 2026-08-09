@@ -13,8 +13,8 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
         builder.Configuration.GetConnectionString("DefaultConnection")));
 
 builder.Services.AddScoped<IDocumentService, DocumentService>();
-// builder.Services.AddScoped<IAIService, AIService>();
-builder.Services.AddScoped<IAIService, FakeAIService>();
+builder.Services.AddScoped<IAIService, AIService>();
+// builder.Services.AddScoped<IAIService, FakeAIService>();
 builder.Services.AddScoped<IDocumentExtractor, DocxDocumentExtractor>();
 builder.Services.AddScoped<IDocumentExtractor, PdfDocumentExtractor>();
 builder.Services.AddScoped<ISpreadsheetService, SpreadsheetService>();
