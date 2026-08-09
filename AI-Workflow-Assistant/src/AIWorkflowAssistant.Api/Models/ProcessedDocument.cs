@@ -12,6 +12,8 @@ public class ProcessedDocument
 
     public string AiSummary { get; set; } = string.Empty;
 
+    public string ActionItems { get; set; } = "[]";
+
     public string? OutputFilePath { get; set; }
 
     public string Status { get; set; } = "Pending";

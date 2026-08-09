@@ -16,9 +16,9 @@ namespace AIWorkflowAssistant.Api.Controllers
         }
 
         [HttpPost("process")]
-        public ActionResult<DocumentResponseDto> ProcessDocument(DocumentRequestDto request)
+        public async Task<ActionResult<DocumentResponseDto>> ProcessDocument([FromForm] DocumentRequestDto request)
         {
-            var response = _documentService.ProcessDocument(request);
+            var response = await _documentService.ProcessDocumentAsync(request);
 
             return Ok(response);
 

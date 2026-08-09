@@ -2,6 +2,7 @@ using AIWorkflowAssistant.Api.Interfaces;
 using AIWorkflowAssistant.Api.Services;
 using AIWorkflowAssistant.Api.Data;
 using Microsoft.EntityFrameworkCore;
+using AIWorkflowAssistant.Api.Services.DocumentExtraction;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -10,8 +11,13 @@ builder.Services.AddControllers();
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(
         builder.Configuration.GetConnectionString("DefaultConnection")));
-        
+
 builder.Services.AddScoped<IDocumentService, DocumentService>();
+// builder.Services.AddScoped<IAIService, AIService>();
+builder.Services.AddScoped<IAIService, FakeAIService>();
+builder.Services.AddScoped<IDocumentExtractor, DocxDocumentExtractor>();
+builder.Services.AddScoped<IDocumentExtractor, PdfDocumentExtractor>();
+builder.Services.AddScoped<ISpreadsheetService, SpreadsheetService>();
 
 // Add services to the container.
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
@@ -33,7 +39,3 @@ app.MapControllers();
 
 app.Run();
 
-record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
-{
-    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
-}
