@@ -1,6 +1,6 @@
 using AIWorkflowAssistant.Api.Interfaces;
-using AIWorkflowAssistant.Api.Models;
 using Microsoft.AspNetCore.Mvc;
+using AIWorkflowAssistant.Api.Models;
 
 namespace AIWorkflowAssistant.Api.Controllers;
 
@@ -9,10 +9,17 @@ namespace AIWorkflowAssistant.Api.Controllers;
 public class SpreadsheetController : ControllerBase
 {
     private readonly ISpreadsheetService _spreadsheetService;
+    private readonly ISpreadsheetFileGenerator _fileGenerator;
 
-    public SpreadsheetController(ISpreadsheetService spreadsheetService)
+    public SpreadsheetController(
+        ISpreadsheetService spreadsheetService,
+        ISpreadsheetFileGenerator fileGenerator)
     {
-        _spreadsheetService = spreadsheetService;
+        _spreadsheetService =
+            spreadsheetService;
+
+        _fileGenerator =
+            fileGenerator;
     }
 
     [HttpPost("analyze")]
@@ -20,13 +27,34 @@ public class SpreadsheetController : ControllerBase
     public async Task<IActionResult> Analyze(
         [FromForm] SpreadsheetUploadRequest request)
     {
-        if (request.File == null || request.File.Length == 0)
+        if (request.File == null ||
+            request.File.Length == 0)
         {
-            return BadRequest("A spreadsheet file is required.");
+            return BadRequest(
+                "A spreadsheet file is required.");
         }
 
-        var result = await _spreadsheetService.ProcessAsync(request.File);
+        var spreadsheet =
+            await _spreadsheetService
+                .ExtractAsync(request.File);
 
-        return Ok(result);
+        var analysis =
+            await _spreadsheetService
+                .ProcessAsync(request.File);
+
+        var outputPath =
+            await _fileGenerator.GenerateAsync(
+                request.File.FileName,
+                spreadsheet,
+                analysis);
+
+        var fileBytes =
+            await System.IO.File.ReadAllBytesAsync(
+                outputPath);
+
+        return File(
+            fileBytes,
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            Path.GetFileName(outputPath));
     }
 }
