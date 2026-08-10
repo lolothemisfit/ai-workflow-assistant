@@ -1,24 +1,16 @@
-using System.Text.Json;
-using AIWorkflowAssistant.Api.Data;
 using AIWorkflowAssistant.Api.DTOs;
 using AIWorkflowAssistant.Api.Interfaces;
-using AIWorkflowAssistant.Api.Models;
 using ClosedXML.Excel;
-using Microsoft.AspNetCore.Http;
 using Microsoft.VisualBasic.FileIO;
 
 namespace AIWorkflowAssistant.Api.Services;
 
 public class SpreadsheetService : ISpreadsheetService
 {
-    private readonly ApplicationDbContext _context;
     private readonly IAIService _aiService;
 
-    public SpreadsheetService(
-        ApplicationDbContext context,
-        IAIService aiService)
+    public SpreadsheetService(IAIService aiService)
     {
-        _context = context;
         _aiService = aiService;
     }
 
@@ -38,6 +30,7 @@ public class SpreadsheetService : ISpreadsheetService
         {
             ".csv" => await ExtractCsvAsync(file),
             ".xlsx" => await ExtractExcelAsync(file),
+
             _ => throw new ArgumentException(
                 "Only CSV and XLSX files are supported.")
         };
@@ -46,35 +39,11 @@ public class SpreadsheetService : ISpreadsheetService
     public async Task<SpreadsheetAnalysisDto> ProcessAsync(
         IFormFile file)
     {
-        var spreadsheet = await ExtractAsync(file);
+        var spreadsheet =
+            await ExtractAsync(file);
 
-        var aiResult =
-            await _aiService.AnalyzeSpreadsheetAsync(
-                spreadsheet);
-
-        var extension = Path.GetExtension(file.FileName)
-            .ToLowerInvariant();
-
-        var originalContent =
-            JsonSerializer.Serialize(spreadsheet);
-
-        var document = new ProcessedDocument
-        {
-            OriginalFileName = file.FileName,
-            FileType = extension,
-            OriginalContent = originalContent,
-            AiSummary = aiResult.Summary,
-            ActionItems = JsonSerializer.Serialize(
-                aiResult.Recommendations),
-            Status = aiResult.Status,
-            ProcessedAt = DateTime.UtcNow
-        };
-
-        _context.ProcessedDocuments.Add(document);
-
-        await _context.SaveChangesAsync();
-
-        return aiResult;
+        return await _aiService
+            .AnalyzeSpreadsheetAsync(spreadsheet);
     }
 
     private async Task<SpreadsheetDataDto> ExtractCsvAsync(
@@ -85,8 +54,11 @@ public class SpreadsheetService : ISpreadsheetService
         using var stream = file.OpenReadStream();
         using var reader = new TextFieldParser(stream);
 
-        reader.TextFieldType = FieldType.Delimited;
+        reader.TextFieldType =
+            FieldType.Delimited;
+
         reader.SetDelimiters(",");
+
         reader.HasFieldsEnclosedInQuotes = true;
 
         if (reader.EndOfData)
@@ -97,7 +69,8 @@ public class SpreadsheetService : ISpreadsheetService
 
         var headers = reader.ReadFields();
 
-        if (headers == null || headers.Length == 0)
+        if (headers == null ||
+            headers.Length == 0)
         {
             throw new ArgumentException(
                 "The CSV file does not contain headers.");
@@ -116,13 +89,17 @@ public class SpreadsheetService : ISpreadsheetService
                 continue;
             }
 
-            var row = new Dictionary<string, string>();
+            var row =
+                new Dictionary<string, string>();
 
-            for (var i = 0; i < result.Headers.Count; i++)
+            for (var i = 0;
+                 i < result.Headers.Count;
+                 i++)
             {
-                var value = i < fields.Length
-                    ? fields[i].Trim()
-                    : string.Empty;
+                var value =
+                    i < fields.Length
+                        ? fields[i].Trim()
+                        : string.Empty;
 
                 row[result.Headers[i]] = value;
             }
@@ -133,24 +110,31 @@ public class SpreadsheetService : ISpreadsheetService
         return result;
     }
 
-    private async Task<SpreadsheetDataDto> ExtractExcelAsync(
+    private Task<SpreadsheetDataDto> ExtractExcelAsync(
         IFormFile file)
     {
-        using var stream = file.OpenReadStream();
-        using var workbook = new XLWorkbook(stream);
+        using var stream =
+            file.OpenReadStream();
 
-        var worksheet = workbook.Worksheets.First();
+        using var workbook =
+            new XLWorkbook(stream);
 
-        var result = new SpreadsheetDataDto();
+        var worksheet =
+            workbook.Worksheets.First();
 
-        var firstRow = worksheet.FirstRowUsed();
+        var result =
+            new SpreadsheetDataDto();
+
+        var firstRow =
+            worksheet.FirstRowUsed();
 
         if (firstRow == null)
         {
-            return result;
+            return Task.FromResult(result);
         }
 
-        var headerCells = firstRow.CellsUsed();
+        var headerCells =
+            firstRow.CellsUsed();
 
         foreach (var cell in headerCells)
         {
@@ -158,7 +142,8 @@ public class SpreadsheetService : ISpreadsheetService
                 cell.GetString().Trim());
         }
 
-        foreach (var row in worksheet.RowsUsed().Skip(1))
+        foreach (
+            var row in worksheet.RowsUsed().Skip(1))
         {
             var rowData =
                 new Dictionary<string, string>();
@@ -167,7 +152,8 @@ public class SpreadsheetService : ISpreadsheetService
                  i < result.Headers.Count;
                  i++)
             {
-                var cell = row.Cell(i + 1);
+                var cell =
+                    row.Cell(i + 1);
 
                 rowData[result.Headers[i]] =
                     cell.GetString().Trim();
@@ -176,6 +162,6 @@ public class SpreadsheetService : ISpreadsheetService
             result.Rows.Add(rowData);
         }
 
-        return result;
+        return Task.FromResult(result);
     }
 }

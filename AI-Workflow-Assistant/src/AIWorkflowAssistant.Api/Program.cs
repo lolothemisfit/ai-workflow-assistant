@@ -3,6 +3,7 @@ using AIWorkflowAssistant.Api.Services;
 using AIWorkflowAssistant.Api.Data;
 using Microsoft.EntityFrameworkCore;
 using AIWorkflowAssistant.Api.Services.DocumentExtraction;
+using AIWorkflowAssistant.Api.Services.FileGeneration;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -18,6 +19,8 @@ builder.Services.AddScoped<IAIService, AIService>();
 builder.Services.AddScoped<IDocumentExtractor, DocxDocumentExtractor>();
 builder.Services.AddScoped<IDocumentExtractor, PdfDocumentExtractor>();
 builder.Services.AddScoped<ISpreadsheetService, SpreadsheetService>();
+builder.Services.AddScoped<IDocumentFileGenerator, DocumentFileGenerator>();
+builder.Services.AddScoped<ISpreadsheetFileGenerator, SpreadsheetFileGenerator>();
 
 // Add services to the container.
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
